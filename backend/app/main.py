@@ -6,7 +6,7 @@ from app.routers import products, customers, orders, dashboard
 
 app = FastAPI(title="Inventory & Order Management System", version="1.0.0")
 
-origins = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
+origins = os.getenv("CORS_ORIGINS", "https://frontend-rust-eight-57.vercel.app,http://localhost:3000").split(",")
 
 app.add_middleware(
     CORSMiddleware,
