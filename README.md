@@ -30,8 +30,9 @@ A full-stack inventory and order management application with real-time stock tra
 |------------|---------|
 | **Docker** | Containerization |
 | **Docker Compose v3.8** | Multi-service orchestration |
-| **Render** | Backend cloud deployment |
-| **Vercel** | Frontend cloud deployment |
+| **Docker Hub** | Backend image registry ([shuklasarvesh/inventoryms](https://hub.docker.com/r/shuklasarvesh/inventoryms)) |
+| **Render** | Backend cloud deployment ([inventoryms-backend-q9z0.onrender.com](https://inventoryms-backend-q9z0.onrender.com)) |
+| **Vercel** | Frontend cloud deployment ([frontend-rust-eight-57.vercel.app](https://frontend-rust-eight-57.vercel.app)) |
 | **Nginx** | Production frontend server |
 | **Git** | Version control |
 
@@ -169,27 +170,35 @@ OrderItem (id, order_id, product_id, quantity, unit_price)
 
 *Fields marked with `*` are unique and indexed.
 
+## Live URLs
+
+| Service | URL |
+|---------|-----|
+| **Backend API** | [https://inventoryms-backend-q9z0.onrender.com](https://inventoryms-backend-q9z0.onrender.com) |
+| **API Docs** | [https://inventoryms-backend-q9z0.onrender.com/docs](https://inventoryms-backend-q9z0.onrender.com/docs) |
+| **Frontend** | [https://frontend-rust-eight-57.vercel.app](https://frontend-rust-eight-57.vercel.app) |
+| **Docker Image** | [shuklasarvesh/inventoryms](https://hub.docker.com/r/shuklasarvesh/inventoryms) |
+
 ## Deployment
 
-### Backend (Render)
+### Backend (Render — Docker Runtime)
 
-1. Push to GitHub
+1. Push to GitHub (auto-deploy enabled)
 2. [Render Dashboard](https://dashboard.render.com) → **New Web Service** → connect repo
 3. Root Directory: `backend`
-4. Build: `pip install -r requirements.txt`
-5. Start: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-6. Environment:
+4. Runtime: **Docker** (uses `backend/Dockerfile`)
+5. Environment:
    - `DATABASE_URL` = Render PostgreSQL Internal URL
-   - `CORS_ORIGINS` = `https://your-frontend.vercel.app`
-7. Add **Render PostgreSQL** database, deploy
+   - `CORS_ORIGINS` = `https://frontend-rust-eight-57.vercel.app`
+6. Add **Render PostgreSQL** database, deploy
 
 ### Frontend (Vercel)
 
-1. Push to GitHub
+1. Push to GitHub (auto-deploy enabled)
 2. [Vercel Dashboard](https://vercel.com) → **New Project** → connect repo
 3. Root Directory: `frontend`
 4. Framework: `Vite`
-5. Environment: `VITE_API_URL` = `https://your-backend.onrender.com`
+5. Build-time env: `vercel env add VITE_API_URL production` = `https://inventoryms-backend-q9z0.onrender.com`
 6. Deploy
 
 ## Docker Commands
@@ -206,6 +215,10 @@ docker compose down
 
 # Reset database (deletes volume)
 docker compose down -v
+
+# Push backend image to Docker Hub
+docker build -t shuklasarvesh/inventoryms:latest -f Dockerfile .
+docker push shuklasarvesh/inventoryms:latest
 
 # View logs
 docker compose logs -f backend
