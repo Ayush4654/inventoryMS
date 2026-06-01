@@ -1,18 +1,49 @@
 # Inventory & Order Management System
 
-A full-stack inventory and order management system built with FastAPI, React, PostgreSQL, and Docker.
+A full-stack inventory and order management application with real-time stock tracking, order processing, and dashboard analytics. Built with FastAPI + React + PostgreSQL.
 
 ## Tech Stack
 
-| Layer       | Technology                                         |
-|-------------|----------------------------------------------------|
-| Backend     | Python 3.11, FastAPI, SQLAlchemy (async), Alembic  |
-| Frontend    | React 18, Vite, Axios, React Router v6, TailwindCSS |
-| Database    | PostgreSQL 15                                      |
-| Container   | Docker + Docker Compose v3.8                       |
-| Deployment  | Backend → Render, Frontend → Vercel                |
+### Backend
+| Technology | Purpose |
+|------------|---------|
+| **Python 3.11** | Core language |
+| **FastAPI** | REST API framework with automatic OpenAPI docs |
+| **SQLAlchemy** (async) | ORM with async session support |
+| **Alembic** | Database schema migrations |
+| **Pydantic** | Request/Response validation with email support |
+| **Uvicorn** | ASGI server |
+| **asyncpg** | PostgreSQL async driver |
+| **PostgreSQL 15** | Primary database |
 
----
+### Frontend
+| Technology | Purpose |
+|------------|---------|
+| **React 18** | UI library |
+| **Vite** | Build tool and dev server |
+| **React Router v6** | Client-side routing |
+| **Axios** | HTTP client for API calls |
+| **TailwindCSS** | Utility-first CSS framework |
+
+### DevOps & Deployment
+| Technology | Purpose |
+|------------|---------|
+| **Docker** | Containerization |
+| **Docker Compose v3.8** | Multi-service orchestration |
+| **Render** | Backend cloud deployment |
+| **Vercel** | Frontend cloud deployment |
+| **Nginx** | Production frontend server |
+| **Git** | Version control |
+
+## Features
+
+- **Product Management** — CRUD operations with unique SKU validation and stock tracking
+- **Customer Management** — Create and manage customers with unique email validation
+- **Order Processing** — Atomic order creation with stock deduction, price snapshots, and rollback on failure
+- **Order Cancellation** — Automatic stock restoration when orders are cancelled
+- **Dashboard Analytics** — Real-time summary stats and low-stock product alerts (qty < 10)
+- **Interactive API Docs** — Auto-generated Swagger UI at `/docs`
+- **Responsive UI** — Clean dark sidebar layout with TailwindCSS
 
 ## Project Structure
 
@@ -20,23 +51,23 @@ A full-stack inventory and order management system built with FastAPI, React, Po
 inventory-system/
 ├── backend/
 │   ├── app/
-│   │   ├── main.py           # FastAPI entry point
-│   │   ├── database.py       # Async engine + session
-│   │   ├── models/           # SQLAlchemy ORM models
-│   │   ├── schemas/          # Pydantic request/response schemas
-│   │   ├── crud/             # Database operations
-│   │   └── routers/          # API route handlers
-│   ├── alembic/              # Database migrations
+│   │   ├── main.py              # FastAPI entry, CORS, router registration
+│   │   ├── database.py          # Async SQLAlchemy engine + session
+│   │   ├── models/              # Product, Customer, Order, OrderItem ORM
+│   │   ├── schemas/             # Pydantic Create/Update/Response schemas
+│   │   ├── crud/                # Database operation functions
+│   │   └── routers/             # Products, Customers, Orders, Dashboard endpoints
+│   ├── alembic/                 # Migration scripts
 │   ├── alembic.ini
 │   ├── Dockerfile
 │   └── requirements.txt
 ├── frontend/
 │   ├── src/
-│   │   ├── api/              # Axios instance
-│   │   ├── components/       # Reusable UI components
-│   │   └── pages/            # Route pages
+│   │   ├── api/                 # Axios instance (reads VITE_API_URL)
+│   │   ├── components/          # Navbar, Sidebar, Modal, Table, Button, Alert
+│   │   └── pages/               # Dashboard, Products, Customers, Orders, OrderDetail
 │   ├── Dockerfile
-│   ├── nginx.conf
+│   ├── nginx.conf               # SPA fallback for React Router
 │   ├── vite.config.js
 │   ├── tailwind.config.js
 │   └── package.json
@@ -45,21 +76,19 @@ inventory-system/
 └── README.md
 ```
 
----
-
 ## Local Development
 
 ### Prerequisites
 
-- Docker & Docker Compose installed
+- Docker & Docker Compose
 - Git
 
 ### Setup
 
 ```bash
 # 1. Clone the repository
-git clone <repository-url>
-cd inventory-system
+git clone https://github.com/Ayush4654/inventoryMS.git
+cd inventoryMS
 
 # 2. Copy environment file and fill in values
 cp .env.example .env
@@ -85,29 +114,40 @@ POSTGRES_PASSWORD=yourpassword
 CORS_ORIGINS=http://localhost:3000
 ```
 
----
+### Run without Docker (Windows)
+
+```bash
+# Backend
+cd backend
+pip install -r requirements.txt
+set DATABASE_URL=sqlite+aiosqlite:///./inventory.db
+uvicorn app.main:app --reload --port 8000
+
+# Frontend (separate terminal)
+cd frontend
+npm install
+npm run dev
+```
 
 ## API Endpoints
 
-| Method | Endpoint              | Description                        |
-|--------|-----------------------|------------------------------------|
-| POST   | `/products`           | Create a new product               |
-| GET    | `/products`           | List all products                  |
-| GET    | `/products/{id}`      | Get a single product               |
-| PUT    | `/products/{id}`      | Update a product (partial)         |
-| DELETE | `/products/{id}`      | Delete a product                   |
-| POST   | `/customers`          | Create a new customer              |
-| GET    | `/customers`          | List all customers                 |
-| GET    | `/customers/{id}`     | Get a single customer              |
-| DELETE | `/customers/{id}`     | Delete a customer                  |
-| POST   | `/orders`             | Create an order (with stock check) |
-| GET    | `/orders`             | List all orders                    |
-| GET    | `/orders/{id}`        | Get order details                  |
-| DELETE | `/orders/{id}`        | Cancel order & restore stock       |
-| GET    | `/dashboard`          | Get summary statistics             |
-| GET    | `/health`             | Health check                       |
-
----
+| Method | Endpoint              | Description                        | Status Codes        |
+|--------|-----------------------|------------------------------------|---------------------|
+| POST   | `/products`           | Create a new product               | 201, 400            |
+| GET    | `/products`           | List all products                  | 200                 |
+| GET    | `/products/{id}`      | Get a single product               | 200, 404            |
+| PUT    | `/products/{id}`      | Update a product (partial)         | 200, 400, 404       |
+| DELETE | `/products/{id}`      | Delete a product                   | 200, 404            |
+| POST   | `/customers`          | Create a new customer              | 201, 400            |
+| GET    | `/customers`          | List all customers                 | 200                 |
+| GET    | `/customers/{id}`     | Get a single customer              | 200, 404            |
+| DELETE | `/customers/{id}`     | Delete a customer                  | 200, 404            |
+| POST   | `/orders`             | Create an order (with stock check) | 201, 400, 404       |
+| GET    | `/orders`             | List all orders                    | 200                 |
+| GET    | `/orders/{id}`        | Get full order details             | 200, 404            |
+| DELETE | `/orders/{id}`        | Cancel order & restore stock       | 200, 404            |
+| GET    | `/dashboard`          | Get summary statistics             | 200                 |
+| GET    | `/health`             | Health check                       | 200                 |
 
 ## Business Logic
 
@@ -118,70 +158,57 @@ CORS_ORIGINS=http://localhost:3000
 5. **Order cancellation** — Restores stock for all items and deletes the order
 6. **Low stock** — Products with quantity < 10 are flagged on the dashboard
 
----
+## Database Models
 
-## Backend Deployment (Render)
+```
+Product   (id, name, sku*, price, quantity, created_at, updated_at)
+Customer  (id, full_name, email*, phone, created_at)
+Order     (id, customer_id, status[enum], total_amount, created_at)
+OrderItem (id, order_id, product_id, quantity, unit_price)
+```
 
-1. Push the repository to GitHub
-2. Go to [Render Dashboard](https://dashboard.render.com) → **New Web Service**
-3. Connect your repository and set **Root Directory** to `backend`
-4. Configure:
+*Fields marked with `*` are unique and indexed.
 
-   | Setting         | Value                                                  |
-   |-----------------|--------------------------------------------------------|
-   | Build Command   | `pip install -r requirements.txt`                      |
-   | Start Command   | `uvicorn app.main:app --host 0.0.0.0 --port $PORT`    |
-   | Python Version  | 3.11                                                   |
+## Deployment
 
-5. Add the following **Environment Variables**:
+### Backend (Render)
 
-   | Variable       | Value                                                    |
-   |----------------|----------------------------------------------------------|
-   | `DATABASE_URL` | `postgresql+asyncpg://user:pass@host:5432/inventory_db` |
-   | `CORS_ORIGINS` | `https://your-frontend.vercel.app`                       |
+1. Push to GitHub
+2. [Render Dashboard](https://dashboard.render.com) → **New Web Service** → connect repo
+3. Root Directory: `backend`
+4. Build: `pip install -r requirements.txt`
+5. Start: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+6. Environment:
+   - `DATABASE_URL` = Render PostgreSQL Internal URL
+   - `CORS_ORIGINS` = `https://your-frontend.vercel.app`
+7. Add **Render PostgreSQL** database, deploy
 
-6. Create a **Render PostgreSQL** database and copy the Internal Connection String
-7. Deploy
+### Frontend (Vercel)
 
----
-
-## Frontend Deployment (Vercel)
-
-1. Push the repository to GitHub
-2. Go to [Vercel Dashboard](https://vercel.com) → **New Project**
-3. Connect your repository and set **Root Directory** to `frontend`
-4. Set **Framework Preset** to `Vite`
-5. Add environment variable:
-
-   | Variable        | Value                                  |
-   |-----------------|----------------------------------------|
-   | `VITE_API_URL`  | `https://your-backend.onrender.com`    |
-
+1. Push to GitHub
+2. [Vercel Dashboard](https://vercel.com) → **New Project** → connect repo
+3. Root Directory: `frontend`
+4. Framework: `Vite`
+5. Environment: `VITE_API_URL` = `https://your-backend.onrender.com`
 6. Deploy
-
----
 
 ## Docker Commands
 
 ```bash
-# Build and start all services
+# Build and start
 docker compose up --build
 
-# Start in detached mode
+# Run in background
 docker compose up --build -d
 
-# Stop all services
+# Stop
 docker compose down
 
-# Stop and remove volumes (resets database)
+# Reset database (deletes volume)
 docker compose down -v
 
 # View logs
 docker compose logs -f backend
 docker compose logs -f frontend
 docker compose logs -f db
-
-# Rebuild a single service
-docker compose build backend
-docker compose build frontend
 ```
